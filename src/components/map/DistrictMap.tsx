@@ -5,10 +5,20 @@ import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import type { GeoJsonObject } from "geojson";
 import type { StyleFunction } from "leaflet";
 import type { District } from "@/types";
-import { CATEGORY_COLORS } from "@/lib/constants";
 import "leaflet/dist/leaflet.css";
 
+// GADM NAME_1 -> our District slug (only non-obvious ones need mapping)
+const GADM_TO_DISTRICT: Record<string, District> = {
+  nuwaraeliya: "nuwara_eliya",
+};
+
+function gadmToSlug(name1: string): District {
+  const key = name1.toLowerCase().replace(/\s+/g, "");
+  return (GADM_TO_DISTRICT[key] ?? key) as District;
+}
+
 interface DistrictMapProps {
+  // district slug -> hex color for that district
   activeDistricts?: Partial<Record<District, string>>;
 }
 
@@ -22,16 +32,16 @@ export default function DistrictMap({ activeDistricts = {} }: DistrictMapProps) 
       .catch(console.error);
   }, []);
 
-  const styleDistrict: StyleFunction = (feature) => {
-    const raw = feature?.properties?.NAME_2 as string | undefined;
-    const slug = raw?.toLowerCase().replace(/\s+/g, "_") as District | undefined;
-    const categoryColor = slug ? activeDistricts[slug] : undefined;
+  const styleFeature: StyleFunction = (feature) => {
+    const name1 = feature?.properties?.NAME_1 as string | undefined;
+    const slug = name1 ? gadmToSlug(name1) : undefined;
+    const color = slug ? activeDistricts[slug] : undefined;
 
     return {
-      fillColor: categoryColor ?? "#1a2235",
-      fillOpacity: categoryColor ? 0.65 : 0.5,
+      fillColor: color ?? "#1a2235",
+      fillOpacity: color ? 0.65 : 0.45,
       color: "#1e2d45",
-      weight: 1,
+      weight: 0.5,
       stroke: true,
     };
   };
@@ -44,7 +54,6 @@ export default function DistrictMap({ activeDistricts = {} }: DistrictMapProps) 
       maxZoom={13}
       className="size-full"
       zoomControl={false}
-      attributionControl={true}
     >
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -56,7 +65,7 @@ export default function DistrictMap({ activeDistricts = {} }: DistrictMapProps) 
         <GeoJSON
           key={JSON.stringify(activeDistricts)}
           data={geodata}
-          style={styleDistrict}
+          style={styleFeature}
         />
       )}
     </MapContainer>
