@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+dist/
+target/
+
+.env
+.env.local
+.env.*.local
+
+.turbo/
+.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+
+supabase/.temp/
